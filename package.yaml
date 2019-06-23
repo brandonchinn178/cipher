@@ -1,0 +1,24 @@
+name: cipher
+version: 0.1
+
+ghc-options: -Wall -Werror
+when:
+  - condition: impl(ghc >= 8.0)
+    ghc-options:
+      - -Wcompat
+      - -Wincomplete-record-updates
+      - -Wincomplete-uni-patterns
+      - -Wnoncanonical-monad-instances
+      - -Wnoncanonical-monadfail-instances
+
+dependencies:
+  - base
+
+library:
+  source-dirs: src
+
+executable:
+  main: Main.hs
+  source-dirs: exe
+  dependencies:
+    - cipher
