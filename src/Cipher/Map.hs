@@ -5,6 +5,7 @@
 
 module Cipher.Map
   ( CipherMap
+  , emptyCipherMap
   , getCipherMap
   , mergeCipherMaps
   , decryptWith
@@ -35,19 +36,22 @@ instance Show CipherMap where
         (_, Nothing) -> Nothing
         (i, Just p) -> Just $ [chr $ i + 65] ++ " -> " ++ [p]
 
+-- | An empty CipherMap.
+emptyCipherMap :: CipherMap
+emptyCipherMap = CipherMap $ V.replicate 26 Nothing
+
 -- | For the given ciphertext and possible plaintext, return the associated
 -- CipherMap. Return Nothing if the plaintext is incompatible with the
 -- ciphertext.
 getCipherMap :: String -> String -> Maybe CipherMap
-getCipherMap ciphertext plaintext = foldlM mergeCipherMaps emptyMap $ mapMaybe toCipherMap $ zip ciphertext plaintext
+getCipherMap ciphertext plaintext = foldlM mergeCipherMaps emptyCipherMap $ mapMaybe toCipherMap $ zip ciphertext plaintext
   where
-    emptyMap = CipherMap $ V.replicate 26 Nothing
     toCipherMap (c, p) =
       case getIndex c of
         -- punctuation in ciphertext needs to be unchanged from the plaintext
         Nothing ->
           if c == p
-            then Just emptyMap
+            then Just emptyCipherMap
             else Nothing
         Just index -> Just $ CipherMap $ V.generate 26 $ \i ->
           if i == index
