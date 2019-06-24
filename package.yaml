@@ -13,6 +13,7 @@ when:
 
 dependencies:
   - base
+  - containers
 
 library:
   source-dirs: src
