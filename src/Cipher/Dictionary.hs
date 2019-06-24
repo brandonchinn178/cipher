@@ -13,7 +13,7 @@ allWordsWithLength len = IntMap.findWithDefault [] len englishDictWordLengths
 
 englishDictWordLengths :: IntMap [String]
 englishDictWordLengths = IntMap.fromListWith (++)
-  [ (length word, [word]) | word <- englishDict ]
+  [ (length word, [word]) | word <- reverse englishDict ]
 
 {-# NOINLINE englishDict #-}
 englishDict :: [String]
