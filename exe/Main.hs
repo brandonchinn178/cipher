@@ -4,5 +4,5 @@ import Cipher (decrypt)
 
 main :: IO ()
 main = do
-  input <- hGetContents stdin
-  print $ decrypt input
+  input <- unwords . lines <$> hGetContents stdin
+  mapM_ putStrLn $ decrypt input
