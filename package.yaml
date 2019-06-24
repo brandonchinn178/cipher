@@ -20,9 +20,10 @@ dependencies:
 library:
   source-dirs: src
 
-executable:
-  main: Main.hs
-  source-dirs: exe
-  dependencies:
-    - cipher
-    - optparse-applicative
+executables:
+  decrypt:
+    main: Main.hs
+    source-dirs: exe
+    dependencies:
+      - cipher
+      - optparse-applicative
