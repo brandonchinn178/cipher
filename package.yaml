@@ -14,6 +14,8 @@ when:
 dependencies:
   - base
   - containers
+  - split
+  - vector
 
 library:
   source-dirs: src
