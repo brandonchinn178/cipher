@@ -25,3 +25,4 @@ executable:
   source-dirs: exe
   dependencies:
     - cipher
+    - optparse-applicative
