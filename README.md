@@ -16,6 +16,8 @@ This is a sentence that uses encryption
 
 ```bash
 $ stack exec -- cipher -d words.txt --no-limit <<< "fhlrd be rdh hlev zlur, rdh dluf zlur be xbmbgo lgf wgcybgo vcj acjxf sh ec kjad kcuh rdhg vcj'uh ybxxbgo rc sh."
+
+$ cat examples/secret1.txt | stack exec cipher
 ```
 
 ## Todo
