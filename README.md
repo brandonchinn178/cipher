@@ -21,5 +21,4 @@ $ stack exec -- cipher -d words.txt --no-limit <<< "fhlrd be rdh hlev zlur, rdh 
 ## Todo
 
 * Quick exit if a word has no CipherMap
-* Remove duplicate decryptions
 * Run profiling to investigate slowdown (the example above runs in 3m)
