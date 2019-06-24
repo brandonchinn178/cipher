@@ -11,8 +11,8 @@ import Cipher.Dictionary
 import Cipher.Map
 
 -- | Return a list of all possible phrases for the given ciphertext.
-decrypt :: String -> [String]
-decrypt s = map (decryptWith s) . mergeAllCipherMaps . map getCipherMaps $ cipherWords
+decrypt :: Dictionary -> String -> [String]
+decrypt dict s = map (decryptWith s) . mergeAllCipherMaps . map (getCipherMaps dict) $ cipherWords
   where
     cipherWords = wordsBy (`elem` "- ") . keepRelevant $ s
 
@@ -31,5 +31,5 @@ decrypt s = map (decryptWith s) . mergeAllCipherMaps . map getCipherMaps $ ciphe
 
 -- | For the given encrypted word, return all the possible CipherMaps that
 -- would decrypt the word to an English word.
-getCipherMaps :: String -> [CipherMap]
-getCipherMaps cipherWord = mapMaybe (getCipherMap cipherWord) $ allWordsWithLength (length cipherWord)
+getCipherMaps :: Dictionary -> String -> [CipherMap]
+getCipherMaps dict cipherWord = mapMaybe (getCipherMap cipherWord) $ allWordsWithLength dict (length cipherWord)
