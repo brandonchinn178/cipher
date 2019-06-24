@@ -13,8 +13,9 @@ data Options = Options
   }
 
 getArgs :: IO Options
-getArgs = execParser $ info (parseOptions <**> helper) fullDesc
+getArgs = execParser $ info (parseOptions <**> helper) $ progDesc description
   where
+    description = "Decrypt ciphertext from stdin encrypted with a substitution cipher"
     parseOptions = Options
       <$> parseLimit
       <*> parseOutput
