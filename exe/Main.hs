@@ -1,6 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 
 import Options.Applicative
+import System.Exit (exitFailure)
 import System.IO (hGetContents, stdin)
 
 import Cipher (decrypt)
@@ -58,8 +59,13 @@ main = do
 
   input <- unwords . lines <$> hGetContents stdin
   let decryptOpts' = resolveOptions decryptOpts
-      decrypted = maybe id take limit $ decrypt decryptOpts' input
+      filterResults = maybe id take limit
+      outputResults = case output of
+        Nothing -> mapM_ putStrLn
+        Just fp -> writeFile fp . unlines
 
-  case output of
-    Nothing -> mapM_ putStrLn decrypted
-    Just fp -> writeFile fp $ unlines decrypted
+  case decrypt decryptOpts' input of
+    Left e -> do
+      putStrLn $ "ERROR: " ++ show e
+      exitFailure
+    Right decrypted -> outputResults . filterResults $ decrypted
