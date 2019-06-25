@@ -21,7 +21,3 @@ $ cat examples/secret1.txt | stack exec decrypt
 
 $ cat examples/secret2.txt | stack exec -- decrypt -d words.txt
 ```
-
-## Todo
-
-* Run profiling to investigate slowdown (the example above runs in 3m)
