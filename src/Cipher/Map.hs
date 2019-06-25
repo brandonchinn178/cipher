@@ -19,6 +19,8 @@ import qualified Data.Set as Set
 import Data.Vector (Vector, (!))
 import qualified Data.Vector as V
 
+import Cipher.Error
+
 -- | The cipher mapping of letters that represents the substitution pairs used
 -- to encrypt a ciphertext.
 --
@@ -83,15 +85,15 @@ mergeCipherMaps (CipherMap cipherVec1) (CipherMap cipherVec2) =
         (Nothing, Just p) -> continue $ Just p
 
 -- | Decrypt the given ciphertext with the given CipherMap.
-decryptWith :: String -> CipherMap -> String
-decryptWith s cipherMap = map decryptChar s
+decryptWith :: String -> CipherMap -> DecryptM String
+decryptWith s cipherMap = mapM decryptChar s
   where
     decryptChar c =
       let toCased = if isUpper c then toUpper else toLower
       in case lookupCipherMap cipherMap c of
-        Nothing -> c
-        Just Nothing -> error $ "Could not decrypt character: " ++ [c]
-        Just (Just p) -> toCased p
+        Nothing -> Right $ c
+        Just Nothing -> Left $ AmbiguousChar c
+        Just (Just p) -> Right $ toCased p
 
 {- Helpers -}
 
