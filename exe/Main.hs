@@ -38,12 +38,18 @@ getArgs = execParser $ info (parseOptions <**> helper) $ progDesc description
       ]
     parseDecryptOpts = DecryptOptions
       <$> parseDictionary
+      <*> parseStrict
     parseDictionary = strOption $ mconcat
       [ long "dictionary"
       , short 'd'
       , help "The dictionary to use (see dictionaries/)"
       , showDefault
       , value "google-10000-english-usa.txt"
+      ]
+    parseStrict = switch $ mconcat
+      [ long "strict"
+      , help "If true, exit immediately if any word cannot be deciphered; otherwise, ignore all such words"
+      , showDefault
       ]
 
 main :: IO ()

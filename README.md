@@ -24,5 +24,4 @@ $ cat examples/secret2.txt | stack exec -- decrypt -d words.txt
 
 ## Todo
 
-* Quick exit if a word has no CipherMap
 * Run profiling to investigate slowdown (the example above runs in 3m)
