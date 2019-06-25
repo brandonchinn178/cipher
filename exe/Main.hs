@@ -4,12 +4,12 @@ import Options.Applicative
 import System.IO (hGetContents, stdin)
 
 import Cipher (decrypt)
-import Cipher.Dictionary (getDictionary)
+import Cipher.Options (DecryptOptions(..), DecryptOptionsConfig, resolveOptions)
 
 data Options = Options
-  { limit      :: Maybe Int
-  , output     :: Maybe FilePath
-  , dictionary :: FilePath
+  { limit       :: Maybe Int
+  , output      :: Maybe FilePath
+  , decryptOpts :: DecryptOptionsConfig
   }
 
 getArgs :: IO Options
@@ -19,7 +19,7 @@ getArgs = execParser $ info (parseOptions <**> helper) $ progDesc description
     parseOptions = Options
       <$> parseLimit
       <*> parseOutput
-      <*> parseDictionary
+      <*> parseDecryptOpts
     parseLimit = parseNoLimit <|> parseLimit'
     parseNoLimit = flag' Nothing $ mconcat
       [ long "no-limit"
@@ -36,6 +36,8 @@ getArgs = execParser $ info (parseOptions <**> helper) $ progDesc description
       , short 'o'
       , help "Save the found decrypted sentences to given file"
       ]
+    parseDecryptOpts = DecryptOptions
+      <$> parseDictionary
     parseDictionary = strOption $ mconcat
       [ long "dictionary"
       , short 'd'
@@ -49,8 +51,8 @@ main = do
   Options{..} <- getArgs
 
   input <- unwords . lines <$> hGetContents stdin
-  let dict = getDictionary dictionary
-      decrypted = maybe id take limit $ decrypt dict input
+  let decryptOpts' = resolveOptions decryptOpts
+      decrypted = maybe id take limit $ decrypt decryptOpts' input
 
   case output of
     Nothing -> mapM_ putStrLn decrypted

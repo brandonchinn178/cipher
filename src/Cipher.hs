@@ -1,7 +1,6 @@
-module Cipher
-  ( decrypt
-  , getCipherMaps
-  ) where
+{-# LANGUAGE RecordWildCards #-}
+
+module Cipher (decrypt) where
 
 import Data.Char (isAlpha)
 import Data.List.Split (wordsBy)
@@ -9,10 +8,11 @@ import Data.Maybe (catMaybes, mapMaybe)
 
 import Cipher.Dictionary
 import Cipher.Map
+import Cipher.Options
 
 -- | Return a list of all possible phrases for the given ciphertext.
-decrypt :: Dictionary -> String -> [String]
-decrypt dict s = map (decryptWith s) . mergeAllCipherMaps . map (getCipherMaps dict) $ cipherWords
+decrypt :: DecryptOptionsResult -> String -> [String]
+decrypt opts s = map (decryptWith s) . mergeAllCipherMaps . map (getCipherMapsForWord opts) $ cipherWords
   where
     cipherWords = wordsBy (`elem` "- ") . keepRelevant $ s
 
@@ -31,5 +31,7 @@ decrypt dict s = map (decryptWith s) . mergeAllCipherMaps . map (getCipherMaps d
 
 -- | For the given encrypted word, return all the possible CipherMaps that
 -- would decrypt the word to an English word.
-getCipherMaps :: Dictionary -> String -> [CipherMap]
-getCipherMaps dict cipherWord = mapMaybe (getCipherMap cipherWord) $ allWordsWithLength dict (length cipherWord)
+getCipherMapsForWord :: DecryptOptionsResult -> String -> [CipherMap]
+getCipherMapsForWord DecryptOptions{..} cipherWord = mapMaybe (getCipherMap cipherWord) possibleWords
+  where
+    possibleWords = allWordsWithLength dictionary $ length cipherWord
