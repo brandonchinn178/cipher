@@ -12,9 +12,13 @@ import Cipher.Options
 
 -- | Return a list of all possible phrases for the given ciphertext.
 decrypt :: DecryptOptionsResult -> String -> [String]
-decrypt opts s = map (decryptWith s) . mergeAllCipherMaps . map (getCipherMapsForWord opts) $ cipherWords
+decrypt opts s = map (decryptWith s) $ getCipherMaps opts s
+
+-- | Get all possible cipher maps that can decrypt the given ciphertext.
+getCipherMaps :: DecryptOptionsResult -> String -> [CipherMap]
+getCipherMaps DecryptOptions{..} = mergeAllCipherMaps . map getCipherMapsForWord . splitWords
   where
-    cipherWords = wordsBy (`elem` "- ") . keepRelevant $ s
+    splitWords = wordsBy (`elem` "- ") . keepRelevant
 
     -- ignore any characters not relevant to decryption; e.g. punctuation or numbers
     keepRelevant = filter (\c -> isAlpha c || c `elem` " -'")
@@ -29,9 +33,6 @@ decrypt opts s = map (decryptWith s) . mergeAllCipherMaps . map (getCipherMapsFo
         , cipherMap2 <- cipherMaps2
         ]
 
--- | For the given encrypted word, return all the possible CipherMaps that
--- would decrypt the word to an English word.
-getCipherMapsForWord :: DecryptOptionsResult -> String -> [CipherMap]
-getCipherMapsForWord DecryptOptions{..} cipherWord = mapMaybe (getCipherMap cipherWord) possibleWords
-  where
-    possibleWords = allWordsWithLength dictionary $ length cipherWord
+    getCipherMapsForWord cipherWord =
+      let possibleWords = allWordsWithLength dictionary $ length cipherWord
+      in mapMaybe (getCipherMap cipherWord) possibleWords
