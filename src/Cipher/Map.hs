@@ -14,33 +14,30 @@ module Cipher.Map
 import Data.Char (chr, isUpper, ord, toLower, toUpper)
 import Data.Foldable (foldlM)
 import Data.List (intercalate)
-import Data.Maybe (catMaybes, isNothing)
-import qualified Data.Set as Set
-import Data.Vector (Vector, (!))
-import qualified Data.Vector as V
+import Data.Maybe (isNothing)
+import Data.IntMap.Strict (IntMap)
+import qualified Data.IntMap.Strict as IntMap
 
 import Cipher.Error
 
 -- | The cipher mapping of letters that represents the substitution pairs used
 -- to encrypt a ciphertext.
 --
--- Invariant: Vector contains 26 elements containing elements of ['A'..'Z'],
--- where ['D', 'Z', ...] represents a ciphermap where 'A' decrypts to 'D',
--- 'B' decrypts to 'Z', etc.
-newtype CipherMap = CipherMap (Vector (Maybe Char))
+-- Invariants:
+--   * Keys must be the result of 'getIndex'
+--   * Values must be ['A'..'Z']
+newtype CipherMap = CipherMap (IntMap Char)
   deriving (Eq, Ord)
 
 instance Show CipherMap where
-  show (CipherMap cipherVec) = "CipherMap { " ++ showMap ++ " }"
+  show (CipherMap charMap) = "CipherMap { " ++ showMap ++ " }"
     where
-      showMap = intercalate "; " . catMaybes . V.toList . V.imap (curry fromPair) $ cipherVec
-      fromPair = \case
-        (_, Nothing) -> Nothing
-        (i, Just p) -> Just $ [chr $ i + 65] ++ " -> " ++ [p]
+      showMap = intercalate "; " . map fromPair . IntMap.toList $ charMap
+      fromPair (i, p) = [fromIndex i] ++ " -> " ++ [p]
 
 -- | An empty CipherMap.
 emptyCipherMap :: CipherMap
-emptyCipherMap = CipherMap $ V.replicate 26 Nothing
+emptyCipherMap = CipherMap IntMap.empty
 
 -- | For the given ciphertext and possible plaintext, return the associated
 -- CipherMap. Return Nothing if the plaintext is incompatible with the
@@ -56,37 +53,24 @@ getCipherMap ciphertext plaintext = foldlM mergeCipherMaps emptyCipherMap =<< ci
           if c == p
             then Just emptyCipherMap
             else Nothing
-        Just index ->
+        Just i ->
           -- plaintext needs to be alphabetical
           if isNothing (getIndex p)
             then Nothing
-            else Just $ CipherMap $ V.generate 26 $ \i ->
-              if i == index
-                then Just $ toUpper p
-                else Nothing
+            else Just $ CipherMap $ IntMap.singleton i $ toUpper p
 
 -- | Combine two CipherMaps, returning Nothing if the CipherMaps are incompatible.
 mergeCipherMaps :: CipherMap -> CipherMap -> Maybe CipherMap
-mergeCipherMaps (CipherMap cipherVec1) (CipherMap cipherVec2) =
-  CipherMap <$> merge Set.empty [] (V.toList $ V.zip cipherVec1 cipherVec2)
+mergeCipherMaps (CipherMap charMap1) (CipherMap charMap2) =
+  if null conflictingKeys && null conflictingVals
+    then Just $ CipherMap $ IntMap.union charMap1 charMap2
+    else Nothing
   where
-    merge _ result [] = Just $ V.fromList $ reverse result
-    merge seen result (curr:rest) =
-      let continue Nothing = merge seen (Nothing : result) rest
-          continue (Just p) =
-            if Set.member p seen
-              -- this plaintext character is already decrypted from another ciphertext character
-              then Nothing
-              else merge (Set.insert p seen) (Just p : result) rest
-      in case curr of
-        (Just p1, Just p2) ->
-          if p1 == p2
-            then continue $ Just p1
-            -- this ciphertext character can't decrypt to two different plaintext characters
-            else Nothing
-        (Nothing, Nothing) -> continue Nothing
-        (Just p, Nothing) -> continue $ Just p
-        (Nothing, Just p) -> continue $ Just p
+    conflictingKeys = getConflictingKeys charMap1 charMap2
+    conflictingVals = getConflictingKeys (swap charMap1) (swap charMap2)
+
+    getConflictingKeys map1 map2 = IntMap.keys $ IntMap.filter id $ IntMap.intersectionWith (/=) map1 map2
+    swap = IntMap.fromList . map (\(i, p) -> (getIndexUnsafe p, fromIndex i)) . IntMap.toList
 
 -- | Decrypt the given ciphertext with the given CipherMap.
 decryptWith :: String -> CipherMap -> DecryptM String
@@ -105,7 +89,7 @@ decryptWith s cipherMap = mapM decryptChar s
 -- Returns Nothing if character is not alphabetical and Just Nothing if the ciphertext
 -- character is not assigned yet.
 lookupCipherMap :: CipherMap -> Char -> Maybe (Maybe Char)
-lookupCipherMap (CipherMap cipherVec) c = (cipherVec !) <$> getIndex c
+lookupCipherMap (CipherMap charMap) c = (`IntMap.lookup` charMap) <$> getIndex c
 
 -- | Get the index of the given character. Returns Nothing if character is not alphabetical.
 getIndex :: Char -> Maybe Int
@@ -115,3 +99,12 @@ getIndex c =
     else Nothing
   where
     i = subtract 65 . ord . toUpper $ c
+
+-- | Get the index of the given character. Returns Nothing if character is not alphabetical.
+getIndexUnsafe :: Char -> Int
+getIndexUnsafe c = case getIndex c of
+  Nothing -> error $ "Bad index: " ++ [c]
+  Just c' -> c'
+
+fromIndex :: Int -> Char
+fromIndex = chr . (+ 65)
