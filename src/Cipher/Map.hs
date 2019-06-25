@@ -14,7 +14,7 @@ module Cipher.Map
 import Data.Char (chr, isUpper, ord, toLower, toUpper)
 import Data.Foldable (foldlM)
 import Data.List (intercalate)
-import Data.Maybe (catMaybes, mapMaybe)
+import Data.Maybe (catMaybes)
 import qualified Data.Set as Set
 import Data.Vector (Vector, (!))
 import qualified Data.Vector as V
@@ -44,8 +44,9 @@ emptyCipherMap = CipherMap $ V.replicate 26 Nothing
 -- CipherMap. Return Nothing if the plaintext is incompatible with the
 -- ciphertext.
 getCipherMap :: String -> String -> Maybe CipherMap
-getCipherMap ciphertext plaintext = foldlM mergeCipherMaps emptyCipherMap $ mapMaybe toCipherMap $ zip ciphertext plaintext
+getCipherMap ciphertext plaintext = foldlM mergeCipherMaps emptyCipherMap =<< cipherMapsByLetter
   where
+    cipherMapsByLetter = mapM toCipherMap $ zip ciphertext plaintext
     toCipherMap (c, p) =
       case getIndex c of
         -- punctuation in ciphertext needs to be unchanged from the plaintext
