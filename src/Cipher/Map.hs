@@ -14,7 +14,7 @@ module Cipher.Map
 import Data.Char (chr, isUpper, ord, toLower, toUpper)
 import Data.Foldable (foldlM)
 import Data.List (intercalate)
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, isNothing)
 import qualified Data.Set as Set
 import Data.Vector (Vector, (!))
 import qualified Data.Vector as V
@@ -56,10 +56,14 @@ getCipherMap ciphertext plaintext = foldlM mergeCipherMaps emptyCipherMap =<< ci
           if c == p
             then Just emptyCipherMap
             else Nothing
-        Just index -> Just $ CipherMap $ V.generate 26 $ \i ->
-          if i == index
-            then Just $ toUpper p
-            else Nothing
+        Just index ->
+          -- plaintext needs to be alphabetical
+          if isNothing (getIndex p)
+            then Nothing
+            else Just $ CipherMap $ V.generate 26 $ \i ->
+              if i == index
+                then Just $ toUpper p
+                else Nothing
 
 -- | Combine two CipherMaps, returning Nothing if the CipherMaps are incompatible.
 mergeCipherMaps :: CipherMap -> CipherMap -> Maybe CipherMap
