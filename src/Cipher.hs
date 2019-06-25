@@ -23,16 +23,16 @@ getCipherMaps DecryptOptions{..} = mergeAllCipherMaps . map getCipherMapsForWord
     -- ignore any characters not relevant to decryption; e.g. punctuation or numbers
     keepRelevant = filter (\c -> isAlpha c || c `elem` " -'")
 
-    mergeAllCipherMaps
-      :: [[CipherMap]] -- ^ all possible CipherMaps for each word
-      -> [CipherMap]   -- ^ all possible CipherMaps for the entire ciphertext
-    mergeAllCipherMaps = flip foldl [emptyCipherMap] $ \cipherMaps1 cipherMaps2 ->
-      catMaybes
-        [ mergeCipherMaps cipherMap1 cipherMap2
-        | cipherMap1 <- cipherMaps1
-        , cipherMap2 <- cipherMaps2
-        ]
-
     getCipherMapsForWord cipherWord =
       let possibleWords = allWordsWithLength dictionary $ length cipherWord
       in mapMaybe (getCipherMap cipherWord) possibleWords
+
+mergeAllCipherMaps
+  :: [[CipherMap]] -- ^ all possible CipherMaps for each word
+  -> [CipherMap]   -- ^ all possible CipherMaps for the entire ciphertext
+mergeAllCipherMaps = flip foldl [emptyCipherMap] $ \cipherMaps1 cipherMaps2 ->
+  catMaybes
+    [ mergeCipherMaps cipherMap1 cipherMap2
+    | cipherMap1 <- cipherMaps1
+    , cipherMap2 <- cipherMaps2
+    ]
