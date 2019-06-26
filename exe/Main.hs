@@ -9,6 +9,7 @@ import Cipher.Options (DecryptOptions(..), DecryptOptionsConfig, resolveOptions)
 
 data Options = Options
   { limit       :: Maybe Int
+  , inputFile   :: Maybe FilePath
   , output      :: Maybe FilePath
   , decryptOpts :: DecryptOptionsConfig
   }
@@ -19,6 +20,7 @@ getArgs = execParser $ info (parseOptions <**> helper) $ progDesc description
     description = "Decrypt ciphertext from stdin encrypted with a substitution cipher"
     parseOptions = Options
       <$> parseLimit
+      <*> parseInputFile
       <*> parseOutput
       <*> parseDecryptOpts
     parseLimit = parseNoLimit <|> parseLimit'
@@ -31,6 +33,11 @@ getArgs = execParser $ info (parseOptions <**> helper) $ progDesc description
       , help "The maximum number of decrypted sentences to find"
       , showDefault
       , value 10
+      ]
+    parseInputFile = optional $ strOption $ mconcat
+      [ long "file"
+      , short 'f'
+      , help "Read the encrypted message from given file (defaults to stdin)"
       ]
     parseOutput = optional $ strOption $ mconcat
       [ long "output"
@@ -57,13 +64,14 @@ main :: IO ()
 main = do
   Options{..} <- getArgs
 
-  input <- unwords . lines <$> hGetContents stdin
   let decryptOpts' = resolveOptions decryptOpts
       filterResults = maybe id take limit
+      readInput = maybe (hGetContents stdin) readFile inputFile
       outputResults = case output of
         Nothing -> mapM_ putStrLn
         Just fp -> writeFile fp . unlines
 
+  input <- unwords . lines <$> readInput
   case decrypt decryptOpts' input of
     Left e -> do
       putStrLn $ "ERROR: " ++ show e

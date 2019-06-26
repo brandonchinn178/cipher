@@ -17,7 +17,7 @@ This is a sentence that uses encryption
 ```bash
 $ stack exec -- decrypt -d words.txt --no-limit <<< "fhlrd be rdh hlev zlur, rdh dluf zlur be xbmbgo lgf wgcybgo vcj acjxf sh ec kjad kcuh rdhg vcj'uh ybxxbgo rc sh."
 
-$ cat examples/secret1.txt | stack exec decrypt
+$ stack exec -- decrypt -f examples/secret1.txt
 
-$ cat examples/secret2.txt | stack exec -- decrypt -d words.txt
+$ stack exec -- decrypt -f examples/secret2.txt -d words.txt
 ```
