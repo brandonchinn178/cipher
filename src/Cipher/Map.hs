@@ -66,14 +66,14 @@ getCipherMap ciphertext plaintext = foldlM mergeCipherMaps emptyCipherMap =<< ci
 -- | Combine two CipherMaps, returning Nothing if the CipherMaps are incompatible.
 mergeCipherMaps :: CipherMap -> CipherMap -> Maybe CipherMap
 mergeCipherMaps (CipherMap charMap1) (CipherMap charMap2) =
-  if null conflictingKeys && null conflictingVals
-    then Just $ CipherMap $ IntMap.union charMap1 charMap2
-    else Nothing
+  if conflictingKeys || conflictingVals
+    then Nothing
+    else Just $ CipherMap $ IntMap.union charMap1 charMap2
   where
-    conflictingKeys = getConflictingKeys charMap1 charMap2
-    conflictingVals = getConflictingKeys (swap charMap1) (swap charMap2)
+    conflictingKeys = areKeysConflicting charMap1 charMap2
+    conflictingVals = areKeysConflicting (swap charMap1) (swap charMap2)
 
-    getConflictingKeys map1 map2 = IntMap.keys $ IntMap.filter id $ IntMap.intersectionWith (/=) map1 map2
+    areKeysConflicting map1 map2 = any snd $ IntMap.toList $ IntMap.intersectionWith (/=) map1 map2
     swap = IntMap.fromList . map (\(i, p) -> (getIndexUnsafe p, fromIndex i)) . IntMap.toList
 
 -- | Decrypt the given ciphertext with the given CipherMap.
