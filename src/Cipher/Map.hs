@@ -39,6 +39,10 @@ instance Show CipherMap where
 emptyCipherMap :: CipherMap
 emptyCipherMap = CipherMap IntMap.empty
 
+-- | A CipherMap with a single value.
+singletonCipherMap :: Int -> Char -> CipherMap
+singletonCipherMap i p = CipherMap $ IntMap.singleton i p
+
 -- | For the given ciphertext and possible plaintext, return the associated
 -- CipherMap. Return Nothing if the plaintext is incompatible with the
 -- ciphertext.
@@ -57,7 +61,7 @@ getCipherMap ciphertext plaintext = foldlM mergeCipherMaps emptyCipherMap =<< ci
           -- plaintext needs to be alphabetical
           if isNothing (getIndex p)
             then Nothing
-            else Just $ CipherMap $ IntMap.singleton i $ toUpper p
+            else Just $ singletonCipherMap i (toUpper p)
 
 -- | Combine two CipherMaps, returning Nothing if the CipherMaps are incompatible.
 mergeCipherMaps :: CipherMap -> CipherMap -> Maybe CipherMap
