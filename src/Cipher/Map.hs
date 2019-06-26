@@ -78,22 +78,21 @@ mergeCipherMaps (CipherMap charMap1) (CipherMap charMap2) =
 
 -- | Decrypt the given ciphertext with the given CipherMap.
 decryptWith :: String -> CipherMap -> DecryptM String
-decryptWith s cipherMap = mapM decryptChar s
+decryptWith s (CipherMap charMap) = mapM decryptChar s
   where
     decryptChar c =
       let toCased = if isUpper c then toUpper else toLower
-      in case lookupCipherMap cipherMap c of
+      in case lookupCipherMap c of
         Nothing -> Right $ c
         Just Nothing -> Left $ AmbiguousChar c
         Just (Just p) -> Right $ toCased p
 
-{- Helpers -}
+    -- | Get the plaintext character for the given ciphertext character in the given CipherMap.
+    -- Returns Nothing if character is not alphabetical and Just Nothing if the ciphertext
+    -- character is not assigned yet.
+    lookupCipherMap c = (`IntMap.lookup` charMap) <$> getIndex c
 
--- | Get the plaintext character for the given ciphertext character in the given CipherMap.
--- Returns Nothing if character is not alphabetical and Just Nothing if the ciphertext
--- character is not assigned yet.
-lookupCipherMap :: CipherMap -> Char -> Maybe (Maybe Char)
-lookupCipherMap (CipherMap charMap) c = (`IntMap.lookup` charMap) <$> getIndex c
+{- Helpers -}
 
 -- | Get the index of the given character. Returns Nothing if character is not alphabetical.
 getIndex :: Char -> Maybe Int
