@@ -15,8 +15,8 @@ import Data.Char (chr, isUpper, ord, toLower, toUpper)
 import Data.Foldable (foldlM)
 import Data.List (intercalate)
 import Data.Maybe (isNothing)
-import Data.IntMap.Strict (IntMap)
-import qualified Data.IntMap.Strict as IntMap
+import Data.IntMap (IntMap)
+import qualified Data.IntMap as IntMap
 
 import Cipher.Error
 
