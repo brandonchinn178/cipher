@@ -2,3 +2,7 @@ resolver: lts-13.22
 
 packages:
   - .
+
+extra-deps:
+  - equivalence-0.3.4
+  - STMonadTrans-0.4.3

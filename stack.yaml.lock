@@ -3,7 +3,21 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    hackage: equivalence-0.3.4@sha256:5f45627279b4ab74b17667e94ef80746a0b6f3654f06333de0f21b0e17047303,1694
+    pantry-tree:
+      size: 501
+      sha256: 515a7ca364af167cbf3f766cfe3dbe06da47bb31fc9d360ecd297d7d57834e30
+  original:
+    hackage: equivalence-0.3.4
+- completed:
+    hackage: STMonadTrans-0.4.3@sha256:1514ba33ae57dbf0bab7d959395feed00909b8c40926d2e36d1a7aa2d2ce7826,1506
+    pantry-tree:
+      size: 402
+      sha256: 0fd4608f9abc5c0baa783dd2be8c8c5d318928b5d18cc8ab3691b18dc6b0b3d1
+  original:
+    hackage: STMonadTrans-0.4.3
 snapshots:
 - completed:
     size: 498186
