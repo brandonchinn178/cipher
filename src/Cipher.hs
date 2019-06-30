@@ -37,19 +37,19 @@ getCipherMaps DecryptOptions{..} = fmap mergeAllCipherMaps . handleMissing . map
     getCipherMapsWithWord cipherWord = (cipherWord, getCipherMapsForWord cipherWord)
 
     -- handle cipherwords without any CipherMaps
-    handleMissing :: [(String, [CipherMap])] -> DecryptM [[CipherMap]]
+    handleMissing :: [(String, [CipherMap])] -> DecryptM [(String, [CipherMap])]
     handleMissing cipherMaps = if strict
       then case filter (null . snd) cipherMaps of
-        [] -> Right $ map snd cipherMaps
+        [] -> Right cipherMaps
         missingWords -> Left $ MissingWords $ map fst missingWords
-      else Right $ filter (not . null) . map snd $ cipherMaps
+      else Right $ filter (not . null . snd) $ cipherMaps
 
-    mergeAllCipherMaps :: [[CipherMap]] -> [CipherMap]
+    mergeAllCipherMaps :: [(String, [CipherMap])] -> [CipherMap]
     mergeAllCipherMaps [] = []
     mergeAllCipherMaps (first:rest) =
       let choose [] = error "should not happen"
           choose (a:as) = (a, as)
-      in foldBy choose (productMaybe mergeCipherMaps) first rest
+      in foldBy choose (productMaybe mergeCipherMaps) (snd first) (map snd rest)
 
 -- | Fold, except using the given function to choose the next item to fold in.
 -- The input list to the choose function is guaranteed to be non-empty.
