@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Cipher (decrypt) where
@@ -47,8 +48,9 @@ getCipherMaps DecryptOptions{..} = fmap mergeAllCipherMaps . handleMissing . map
     mergeAllCipherMaps :: [(String, [CipherMap])] -> [CipherMap]
     mergeAllCipherMaps [] = []
     mergeAllCipherMaps (first:rest) =
-      let choose _ [] = error "should not happen"
-          choose _ (a:as) = (a, as)
+      let choose _ = \case
+            [] -> error "should not happen"
+            (a:as) -> (a, as)
       in foldBy choose (productMaybe mergeCipherMaps) (snd first) (map snd rest)
 
 -- | Fold, except using the given function to choose the next item to fold in.
