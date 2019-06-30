@@ -50,14 +50,28 @@ getCipherMaps DecryptOptions{..} = fmap mergeAllCipherMaps . handleMissing . map
 
     mergeAllCipherMaps :: [(String, [CipherMap])] -> [CipherMap]
     mergeAllCipherMaps [] = []
-    mergeAllCipherMaps (first':rest) =
-      let toLetterBag = first Set.fromList
+    mergeAllCipherMaps cipherMaps =
+      let (first', rest) = maxBy (length . fst) cipherMaps
+          toLetterBag = first Set.fromList
           choose _ = \case
             [] -> error "should not happen"
             (a:as) -> (a, as)
           merge (letterBag1, cipherMaps1) (letterBag2, cipherMaps2) =
             (Set.union letterBag1 letterBag2, productMaybe mergeCipherMaps cipherMaps1 cipherMaps2)
       in snd $ foldBy choose merge (toLetterBag first') (map toLetterBag rest)
+
+-- | Pop the maximum value in the list out of the rest of the list using the given function.
+maxBy :: Ord a => (b -> a) -> [b] -> (b, [b])
+maxBy _ [] = error "maxBy called on empty list"
+maxBy f l@(b:bs) = go 0 (f b) b (zip bs [1..])
+  where
+    go i _ curr [] =
+      let (before, after) = splitAt i l
+      in (curr, before ++ tail after)
+    go i acc curr ((x, i'):xs) =
+      if f x > acc
+        then go i' (f x) x xs
+        else go i acc curr xs
 
 -- | Fold, except using the given function to choose the next item to fold in.
 -- The input list to the choose function is guaranteed to be non-empty.
