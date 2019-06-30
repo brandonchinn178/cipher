@@ -22,7 +22,7 @@ type DecryptOptionsResult = DecryptOptions Dictionary
 
 defaultOptions :: DecryptOptionsConfig
 defaultOptions = DecryptOptions
-  { dictionary = Google
+  { dictionary = Google20k
   , strict = False
   }
 

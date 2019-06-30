@@ -12,7 +12,7 @@ import qualified Data.IntMap.Strict as IntMap
 import System.IO.Unsafe (unsafePerformIO)
 
 data DictName
-  = Google
+  = Google10k
     -- ^ https://github.com/first20hours/google-10000-english/blob/master/google-10000-english-usa.txt
   | Words
     -- ^ Forgot where I found this...
@@ -30,7 +30,7 @@ getDictionary :: DictName -> Dictionary
 getDictionary dictName = Dictionary $ byWordLengths dict
   where
     fp = case dictName of
-      Google -> "google-10000-english-usa.txt"
+      Google10k -> "google-10000-english-usa.txt"
       Words -> "words.txt"
       Google20k -> "20k.txt"
     dict = unsafePerformIO $ lines <$> readFile ("dictionaries/" ++ fp)
