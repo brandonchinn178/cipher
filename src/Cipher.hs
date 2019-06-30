@@ -1,12 +1,15 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TupleSections #-}
 
 module Cipher (decrypt) where
 
 import Control.Applicative (liftA2)
+import Data.Bifunctor (first)
 import Data.Char (isAlpha)
 import Data.List.Split (wordsBy)
 import Data.Maybe (catMaybes, mapMaybe)
+import qualified Data.Set as Set
 
 import Cipher.Dictionary
 import Cipher.Error
@@ -47,11 +50,14 @@ getCipherMaps DecryptOptions{..} = fmap mergeAllCipherMaps . handleMissing . map
 
     mergeAllCipherMaps :: [(String, [CipherMap])] -> [CipherMap]
     mergeAllCipherMaps [] = []
-    mergeAllCipherMaps (first:rest) =
-      let choose _ = \case
+    mergeAllCipherMaps (first':rest) =
+      let toLetterBag = first Set.fromList
+          choose _ = \case
             [] -> error "should not happen"
             (a:as) -> (a, as)
-      in foldBy choose (productMaybe mergeCipherMaps) (snd first) (map snd rest)
+          merge (letterBag1, cipherMaps1) (letterBag2, cipherMaps2) =
+            (Set.union letterBag1 letterBag2, productMaybe mergeCipherMaps cipherMaps1 cipherMaps2)
+      in snd $ foldBy choose merge (toLetterBag first') (map toLetterBag rest)
 
 -- | Fold, except using the given function to choose the next item to fold in.
 -- The input list to the choose function is guaranteed to be non-empty.
