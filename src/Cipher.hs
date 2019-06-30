@@ -2,6 +2,7 @@
 
 module Cipher (decrypt) where
 
+import Control.Applicative (liftA2)
 import Data.Char (isAlpha)
 import Data.List.Split (wordsBy)
 import Data.Maybe (catMaybes, mapMaybe)
@@ -43,12 +44,24 @@ getCipherMaps DecryptOptions{..} = fmap mergeAllCipherMaps . handleMissing . map
         missingWords -> Left $ MissingWords $ map fst missingWords
       else Right $ filter (not . null) . map snd $ cipherMaps
 
-mergeAllCipherMaps
-  :: [[CipherMap]] -- ^ all possible CipherMaps for each word
-  -> [CipherMap]   -- ^ all possible CipherMaps for the entire ciphertext
-mergeAllCipherMaps = flip foldl [emptyCipherMap] $ \cipherMaps1 cipherMaps2 ->
-  catMaybes
-    [ mergeCipherMaps cipherMap1 cipherMap2
-    | cipherMap1 <- cipherMaps1
-    , cipherMap2 <- cipherMaps2
-    ]
+    mergeAllCipherMaps :: [[CipherMap]] -> [CipherMap]
+    mergeAllCipherMaps [] = []
+    mergeAllCipherMaps (first:rest) =
+      let choose [] = error "should not happen"
+          choose (a:as) = (a, as)
+      in foldBy choose (productMaybe mergeCipherMaps) first rest
+
+-- | Fold, except using the given function to choose the next item to fold in.
+-- The input list to the choose function is guaranteed to be non-empty.
+--
+-- > foldBy (\(a:as) -> (a, as)) == foldl
+foldBy :: ([a] -> (a, [a])) -> (b -> a -> b) -> b -> [a] -> b
+foldBy _ _ b [] = b
+foldBy choose f b as =
+  let (a, as') = choose as
+      b' = f b a
+  in foldBy choose f b' as'
+
+-- | Cartesian product, filtering out the Nothings.
+productMaybe :: (a -> a -> Maybe a) -> [a] -> [a] -> [a]
+productMaybe f as bs = catMaybes $ liftA2 f as bs
