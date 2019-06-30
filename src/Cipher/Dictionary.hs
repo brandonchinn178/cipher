@@ -9,7 +9,6 @@ module Cipher.Dictionary
 import Data.Char (toUpper)
 import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as IntMap
-import qualified Data.Set as Set
 import System.IO.Unsafe (unsafePerformIO)
 
 data DictName
@@ -35,8 +34,8 @@ getDictionary dictName = Dictionary $ byWordLengths dict
       Words -> "words.txt"
       Google20k -> "20k.txt"
     dict = unsafePerformIO $ lines <$> readFile ("dictionaries/" ++ fp)
-    byWordLengths words' = Set.toList <$> IntMap.fromListWith Set.union
-      [ (length word, Set.singleton $ map toUpper word) | word <- reverse words' ]
+    byWordLengths words' = IntMap.fromListWith (++)
+      [ (length word, [map toUpper word]) | word <- reverse words' ]
 
 allWordsWithLength :: Dictionary -> Int -> [String]
 allWordsWithLength dict len = IntMap.findWithDefault [] len $ getDictByWordLengths dict
