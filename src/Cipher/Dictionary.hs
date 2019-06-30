@@ -17,6 +17,8 @@ data DictName
     -- ^ https://github.com/first20hours/google-10000-english/blob/master/google-10000-english-usa.txt
   | Words
     -- ^ Forgot where I found this...
+  | Google20k
+    -- ^ https://github.com/first20hours/google-10000-english/blob/master/20k.txt
   deriving (Show,Read,Bounded,Enum)
 
 allDictNames :: [DictName]
@@ -31,6 +33,7 @@ getDictionary dictName = Dictionary $ byWordLengths dict
     fp = case dictName of
       Google -> "google-10000-english-usa.txt"
       Words -> "words.txt"
+      Google20k -> "20k.txt"
     dict = unsafePerformIO $ lines <$> readFile ("dictionaries/" ++ fp)
     byWordLengths words' = Set.toList <$> IntMap.fromListWith Set.union
       [ (length word, Set.singleton $ map toUpper word) | word <- reverse words' ]
