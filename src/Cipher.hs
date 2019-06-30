@@ -1,10 +1,15 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TupleSections #-}
 
 module Cipher (decrypt) where
 
+import Control.Applicative (liftA2)
+import Data.Bifunctor (first)
 import Data.Char (isAlpha)
 import Data.List.Split (wordsBy)
 import Data.Maybe (catMaybes, mapMaybe)
+import qualified Data.Set as Set
 
 import Cipher.Dictionary
 import Cipher.Error
@@ -36,19 +41,47 @@ getCipherMaps DecryptOptions{..} = fmap mergeAllCipherMaps . handleMissing . map
     getCipherMapsWithWord cipherWord = (cipherWord, getCipherMapsForWord cipherWord)
 
     -- handle cipherwords without any CipherMaps
-    handleMissing :: [(String, [CipherMap])] -> DecryptM [[CipherMap]]
+    handleMissing :: [(String, [CipherMap])] -> DecryptM [(String, [CipherMap])]
     handleMissing cipherMaps = if strict
       then case filter (null . snd) cipherMaps of
-        [] -> Right $ map snd cipherMaps
+        [] -> Right cipherMaps
         missingWords -> Left $ MissingWords $ map fst missingWords
-      else Right $ filter (not . null) . map snd $ cipherMaps
+      else Right $ filter (not . null . snd) $ cipherMaps
 
-mergeAllCipherMaps
-  :: [[CipherMap]] -- ^ all possible CipherMaps for each word
-  -> [CipherMap]   -- ^ all possible CipherMaps for the entire ciphertext
-mergeAllCipherMaps = flip foldl [emptyCipherMap] $ \cipherMaps1 cipherMaps2 ->
-  catMaybes
-    [ mergeCipherMaps cipherMap1 cipherMap2
-    | cipherMap1 <- cipherMaps1
-    , cipherMap2 <- cipherMaps2
-    ]
+    mergeAllCipherMaps :: [(String, [CipherMap])] -> [CipherMap]
+    mergeAllCipherMaps [] = []
+    mergeAllCipherMaps cipherMaps =
+      let (first', rest) = maxBy (length . fst) cipherMaps
+          toLetterBag = first Set.fromList
+          choose (letterBag, _) = maxBy $ \(letterBag', _) -> length $ Set.intersection letterBag letterBag'
+          merge (letterBag1, cipherMaps1) (letterBag2, cipherMaps2) =
+            (Set.union letterBag1 letterBag2, productMaybe mergeCipherMaps cipherMaps1 cipherMaps2)
+      in snd $ foldBy choose merge (toLetterBag first') (map toLetterBag rest)
+
+-- | Pop the maximum value in the list out of the rest of the list using the given function.
+maxBy :: Ord a => (b -> a) -> [b] -> (b, [b])
+maxBy _ [] = error "maxBy called on empty list"
+maxBy f l@(b:bs) = go 0 (f b) b (zip bs [1..])
+  where
+    go i _ curr [] =
+      let (before, after) = splitAt i l
+      in (curr, before ++ tail after)
+    go i acc curr ((x, i'):xs) =
+      if f x > acc
+        then go i' (f x) x xs
+        else go i acc curr xs
+
+-- | Fold, except using the given function to choose the next item to fold in.
+-- The input list to the choose function is guaranteed to be non-empty.
+--
+-- > foldBy (\_ (a:as) -> (a, as)) == foldl
+foldBy :: (b -> [a] -> (a, [a])) -> (b -> a -> b) -> b -> [a] -> b
+foldBy _ _ b [] = b
+foldBy choose f b as =
+  let (a, as') = choose b as
+      b' = f b a
+  in foldBy choose f b' as'
+
+-- | Cartesian product, filtering out the Nothings.
+productMaybe :: (a -> a -> Maybe a) -> [a] -> [a] -> [a]
+productMaybe f as bs = catMaybes $ liftA2 f as bs
