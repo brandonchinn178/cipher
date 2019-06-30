@@ -8,7 +8,7 @@ import Cipher (decrypt)
 import Cipher.Options (DecryptOptions(..), DecryptOptionsConfig, resolveOptions)
 
 data Options = Options
-  { limit       :: Maybe Int
+  { limit       :: Int
   , inputFile   :: Maybe FilePath
   , output      :: Maybe FilePath
   , decryptOpts :: DecryptOptionsConfig
@@ -23,16 +23,11 @@ getArgs = execParser $ info (parseOptions <**> helper) $ progDesc description
       <*> parseInputFile
       <*> parseOutput
       <*> parseDecryptOpts
-    parseLimit = parseNoLimit <|> parseLimit'
-    parseNoLimit = flag' Nothing $ mconcat
-      [ long "no-limit"
-      , help "Show all decrypted sentences"
-      ]
-    parseLimit' = fmap Just $ option auto $ mconcat
+    parseLimit = option auto $ mconcat
       [ long "limit"
       , help "The maximum number of decrypted sentences to find"
       , showDefault
-      , value 10
+      , value 1
       ]
     parseInputFile = optional $ strOption $ mconcat
       [ long "file"
@@ -65,7 +60,6 @@ main = do
   Options{..} <- getArgs
 
   let decryptOpts' = resolveOptions decryptOpts
-      filterResults = maybe id take limit
       readInput = maybe (hGetContents stdin) readFile inputFile
       outputResults = case output of
         Nothing -> mapM_ putStrLn
@@ -76,4 +70,4 @@ main = do
     Left e -> do
       putStrLn $ "ERROR: " ++ show e
       exitFailure
-    Right decrypted -> outputResults . filterResults $ decrypted
+    Right decrypted -> outputResults . (take limit) $ decrypted
