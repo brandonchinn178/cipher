@@ -1,11 +1,13 @@
 {-# LANGUAGE RecordWildCards #-}
 
+import Data.List (intercalate)
 import Options.Applicative
 import System.Exit (exitFailure)
 import System.IO (hGetContents, stdin)
 
 import Cipher (decrypt)
-import Cipher.Options (DecryptOptions(..), DecryptOptionsConfig, resolveOptions)
+import Cipher.Dictionary (allDictNames)
+import Cipher.Options (DecryptOptions(..), DecryptOptionsConfig, defaultOptions, resolveOptions)
 
 data Options = Options
   { limit       :: Int
@@ -42,12 +44,12 @@ getArgs = execParser $ info (parseOptions <**> helper) $ progDesc description
     parseDecryptOpts = DecryptOptions
       <$> parseDictionary
       <*> parseStrict
-    parseDictionary = strOption $ mconcat
+    parseDictionary = option auto $ mconcat
       [ long "dictionary"
       , short 'd'
-      , help "The dictionary to use (see dictionaries/)"
+      , help $ "The dictionary to use (one of: " ++ intercalate ", " (map show allDictNames) ++ ")"
       , showDefault
-      , value "google-10000-english-usa.txt"
+      , value $ dictionary defaultOptions
       ]
     parseStrict = switch $ mconcat
       [ long "strict"

@@ -4,10 +4,11 @@ module Cipher.Options
   ( DecryptOptions(..)
   , DecryptOptionsConfig
   , DecryptOptionsResult
+  , defaultOptions
   , resolveOptions
   ) where
 
-import Cipher.Dictionary (Dictionary, getDictionary)
+import Cipher.Dictionary (Dictionary, DictName(..), getDictionary)
 
 data DecryptOptions dict = DecryptOptions
   { dictionary :: dict
@@ -16,8 +17,14 @@ data DecryptOptions dict = DecryptOptions
     -- and try decrypting everything else.
   }
 
-type DecryptOptionsConfig = DecryptOptions String
+type DecryptOptionsConfig = DecryptOptions DictName
 type DecryptOptionsResult = DecryptOptions Dictionary
+
+defaultOptions :: DecryptOptionsConfig
+defaultOptions = DecryptOptions
+  { dictionary = Google
+  , strict = False
+  }
 
 resolveOptions :: DecryptOptionsConfig -> DecryptOptionsResult
 resolveOptions DecryptOptions{..} = DecryptOptions

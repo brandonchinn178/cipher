@@ -17,5 +17,5 @@ $ stack exec -- decrypt <<< "fhlrd be rdh hlev zlur, rdh dluf zlur be xbmbgo lgf
 
 $ stack exec -- decrypt -f examples/secret1.txt
 
-$ stack exec -- decrypt -f examples/secret2.txt -d words.txt --limit 10
+$ stack exec -- decrypt -f examples/secret2.txt -d Words --limit 10
 ```
