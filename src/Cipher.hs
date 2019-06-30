@@ -47,18 +47,18 @@ getCipherMaps DecryptOptions{..} = fmap mergeAllCipherMaps . handleMissing . map
     mergeAllCipherMaps :: [(String, [CipherMap])] -> [CipherMap]
     mergeAllCipherMaps [] = []
     mergeAllCipherMaps (first:rest) =
-      let choose [] = error "should not happen"
-          choose (a:as) = (a, as)
+      let choose _ [] = error "should not happen"
+          choose _ (a:as) = (a, as)
       in foldBy choose (productMaybe mergeCipherMaps) (snd first) (map snd rest)
 
 -- | Fold, except using the given function to choose the next item to fold in.
 -- The input list to the choose function is guaranteed to be non-empty.
 --
--- > foldBy (\(a:as) -> (a, as)) == foldl
-foldBy :: ([a] -> (a, [a])) -> (b -> a -> b) -> b -> [a] -> b
+-- > foldBy (\_ (a:as) -> (a, as)) == foldl
+foldBy :: (b -> [a] -> (a, [a])) -> (b -> a -> b) -> b -> [a] -> b
 foldBy _ _ b [] = b
 foldBy choose f b as =
-  let (a, as') = choose as
+  let (a, as') = choose b as
       b' = f b a
   in foldBy choose f b' as'
 
