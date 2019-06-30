@@ -53,9 +53,7 @@ getCipherMaps DecryptOptions{..} = fmap mergeAllCipherMaps . handleMissing . map
     mergeAllCipherMaps cipherMaps =
       let (first', rest) = maxBy (length . fst) cipherMaps
           toLetterBag = first Set.fromList
-          choose _ = \case
-            [] -> error "should not happen"
-            (a:as) -> (a, as)
+          choose (letterBag, _) = maxBy $ \(letterBag', _) -> length $ Set.intersection letterBag letterBag'
           merge (letterBag1, cipherMaps1) (letterBag2, cipherMaps2) =
             (Set.union letterBag1 letterBag2, productMaybe mergeCipherMaps cipherMaps1 cipherMaps2)
       in snd $ foldBy choose merge (toLetterBag first') (map toLetterBag rest)
